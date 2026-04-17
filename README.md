@@ -2,26 +2,7 @@
 
 `agent-extensions` is a monorepo for small agent-extension deliverables that do not justify separate repos.
 
-## Organization
+## Disclaimer
 
-- `skills/` for skills
-- `mcp-servers/` for MCP servers
-- `plugins/` for plugins
-- `hooks/` for hooks
-
-Each deliverable lives in a second-level folder named for the deliverable, for example:
-
-- `skills/wren`
-- `mcp-servers/wren`
-- `skills/showerthoughts`
-
-Same-named folders across extension types are not automatically related.
-
-## Baseline per Deliverable
-
-Every deliverable starts with:
-
-- `README.md`
-- `AGENTS.md`
-
-Additional files are added only when that extension type clearly needs them.
+AI was used extensively in the generation of this code. It has been vibe-tested
+for my own usage. You are welcome to use it if you are out of tokens.

@@ -1,7 +1,10 @@
 # mcp-servers/wren
 
-A Go MCP server exposing wren todo operations as MCP tools, plus a skill file
+[Wren](https://github.com/bjesus/wren) is a simple file-based, task management system.
+
+This project is a Go MCP server exposing wren todo operations as MCP tools, plus a skill file
 for agents connecting to it.
+
 
 ## What It Does
 
@@ -53,8 +56,8 @@ A successful response looks like:
 
 ## Roadmap
 
-- **HTTP transport** — add an optional HTTP/SSE listener so remote agents on
-  isolated VMs can connect over the network instead of requiring a local process.
+- **HTTP transport** — add an optional HTTP/SSE listener so remote agents > [!CAUTION]
+> manage Wren over the network instead of requiring a local process.
 
 ## Tools
 
@@ -67,3 +70,4 @@ A successful response looks like:
 | `read_task` | Read a task's body content |
 | `prepend_task` | Prepend a string to a task's title |
 | `get_random_task` | Return one random active task |
+

@@ -66,7 +66,7 @@ directory.
 
 **Content:**
 
-- Executable: `wren` (PATH), fallback `/home/vagrant/.local/bin/wren`
+- Executable: `wren` (PATH), fallback `~/.local/bin/wren`
 - Config location and keys
 - Task data model (filename = title, file content = body)
 - Filename conventions: cron and date prefixes

@@ -3,7 +3,7 @@
 `wren` is a plain-file todo manager. Tasks are files in a flat notes directory;
 the filename is the task title and the file content (if any) is the body.
 
-- **Executable:** `wren` (PATH); fallback `/home/vagrant/.local/bin/wren`
+- **Executable:** `wren` (PATH); fallback `~/.local/bin/wren`
 - **Config:** `~/.config/wren/wren.json`
   - `notes_dir` — notes directory (default: `~/Documents/notes`)
   - `done_dir` — done subdirectory, relative to `notes_dir` (default: `done`)
