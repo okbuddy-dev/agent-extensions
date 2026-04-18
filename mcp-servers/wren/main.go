@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"os/exec"
 
@@ -39,21 +41,49 @@ func toolText(s string) *mcp.CallToolResult {
 	}
 }
 
+func bodyLimitHandler(h http.Handler, limit int64) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, limit)
+		h.ServeHTTP(w, r)
+	})
+}
+
+var (
+	addrFlag string
+)
+
+func init() {
+	flag.StringVar(&addrFlag, "addr", "", "Listen address for HTTP transport (e.g., 127.0.0.1:8080 or :8080)")
+}
+
 func main() {
-	if len(os.Args) > 1 && (os.Args[1] == "-h" || os.Args[1] == "--help") {
-		fmt.Println("mcp-wren v0.1.0 — MCP server for wren task management")
-		fmt.Println("Runs on MCP stdio transport. Point your MCP client at this binary.")
-		fmt.Println()
-		fmt.Println("Environment:")
-		fmt.Println("  WREN_BIN  Path to wren binary (default: wren)")
-		os.Exit(0)
+	for _, arg := range os.Args[1:] {
+		if arg == "-h" || arg == "--help" {
+			fmt.Println("mcp-wren v0.2.0 — MCP server for wren task management")
+			fmt.Println("Supports stdio and HTTP transports.")
+			fmt.Println()
+			fmt.Println("Usage:")
+			fmt.Println("  ./mcp-wren           Run on stdio transport (default)")
+			fmt.Println("  TRANSPORT=http ./mcp-wren  Run on HTTP transport")
+			fmt.Println()
+			fmt.Println("Flags:")
+			fmt.Println("  --addr <address>  Listen address for HTTP transport")
+			fmt.Println("                    (overrides MCP_WREN_ADDR env var, default :8080)")
+			fmt.Println()
+			fmt.Println("Environment:")
+			fmt.Println("  WREN_BIN       Path to wren binary (default: wren)")
+			fmt.Println("  TRANSPORT      Transport mode: stdio or http (default: stdio)")
+			fmt.Println("  MCP_WREN_ADDR  HTTP listen address (default: :8080)")
+			os.Exit(0)
+		}
 	}
 
-	s := server.NewMCPServer("wren", "0.1.0",
+	flag.Parse()
+
+	s := server.NewMCPServer("wren", "0.2.0",
 		server.WithToolCapabilities(true),
 	)
 
-	// list_tasks
 	s.AddTool(
 		mcp.NewTool("list_tasks",
 			mcp.WithDescription("List active wren tasks. Optionally filter by keyword."),
@@ -63,7 +93,7 @@ func main() {
 		),
 		func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 			args := []string{"-l"}
-			if f, ok := req.Params.Arguments["filter"].(string); ok && f != "" {
+			if f := req.GetString("filter", ""); f != "" {
 				args = append(args, f)
 			}
 			out, err := runWren(args...)
@@ -74,7 +104,6 @@ func main() {
 		},
 	)
 
-	// list_done_tasks
 	s.AddTool(
 		mcp.NewTool("list_done_tasks",
 			mcp.WithDescription("List completed wren tasks."),
@@ -88,7 +117,6 @@ func main() {
 		},
 	)
 
-	// create_task
 	s.AddTool(
 		mcp.NewTool("create_task",
 			mcp.WithDescription("Create a new wren task. The title becomes the filename."),
@@ -98,7 +126,7 @@ func main() {
 			),
 		),
 		func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			title, _ := req.Params.Arguments["title"].(string)
+			title := req.GetString("title", "")
 			out, err := runWren(title)
 			if err != nil {
 				return toolErr(err), nil
@@ -107,7 +135,6 @@ func main() {
 		},
 	)
 
-	// complete_task
 	s.AddTool(
 		mcp.NewTool("complete_task",
 			mcp.WithDescription("Mark a wren task as done. Use the exact task title to avoid interactive disambiguation."),
@@ -117,7 +144,7 @@ func main() {
 			),
 		),
 		func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			title, _ := req.Params.Arguments["title"].(string)
+			title := req.GetString("title", "")
 			out, err := runWren("-d", title)
 			if err != nil {
 				return toolErr(err), nil
@@ -126,7 +153,6 @@ func main() {
 		},
 	)
 
-	// read_task
 	s.AddTool(
 		mcp.NewTool("read_task",
 			mcp.WithDescription("Read the body content of a wren task."),
@@ -136,7 +162,7 @@ func main() {
 			),
 		),
 		func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			keyword, _ := req.Params.Arguments["keyword"].(string)
+			keyword := req.GetString("keyword", "")
 			out, err := runWren("-r", keyword)
 			if err != nil {
 				return toolErr(err), nil
@@ -145,7 +171,6 @@ func main() {
 		},
 	)
 
-	// prepend_task
 	s.AddTool(
 		mcp.NewTool("prepend_task",
 			mcp.WithDescription("Prepend a string to a wren task's filename (title)."),
@@ -159,8 +184,8 @@ func main() {
 			),
 		),
 		func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			prefix, _ := req.Params.Arguments["prefix"].(string)
-			task, _ := req.Params.Arguments["task"].(string)
+			prefix := req.GetString("prefix", "")
+			task := req.GetString("task", "")
 			out, err := runWren("--prepend", prefix, task)
 			if err != nil {
 				return toolErr(err), nil
@@ -169,7 +194,6 @@ func main() {
 		},
 	)
 
-	// get_random_task
 	s.AddTool(
 		mcp.NewTool("get_random_task",
 			mcp.WithDescription("Return one random active wren task."),
@@ -182,6 +206,30 @@ func main() {
 			return toolText(out), nil
 		},
 	)
+
+	if os.Getenv("TRANSPORT") == "http" {
+		addr := addrFlag
+		if addr == "" {
+			addr = os.Getenv("MCP_WREN_ADDR")
+			if addr == "" {
+				addr = ":8080"
+			}
+		}
+
+		srv := server.NewStreamableHTTPServer(s, server.WithStateLess(true))
+		httpSrv := &http.Server{
+			Addr:              addr,
+			Handler:           bodyLimitHandler(srv, 1<<20),
+			ReadHeaderTimeout: 10e9,
+			ReadTimeout:       30e9,
+			IdleTimeout:       120e9,
+		}
+		fmt.Fprintf(os.Stderr, "mcp-wren v0.2.0 listening on %s/mcp\n", addr)
+		if err := httpSrv.ListenAndServe(); err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
+	}
 
 	if err := server.ServeStdio(s); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)

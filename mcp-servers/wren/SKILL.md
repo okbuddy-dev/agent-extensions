@@ -11,6 +11,8 @@ invoke `wren` as a subprocess and return its output.
 - `notes_dir` default: `~/Documents/notes`
 - `done_dir` default: `done` (relative to `notes_dir`)
 
+The MCP server URL is provided by the agent runtime. This skill describes the tools available once connected.
+
 ---
 
 ## Tools
@@ -105,3 +107,4 @@ Cron field order: `minute hour day-of-month month day-of-week`
 Task body creation via MCP is out of scope — wren has no non-interactive body
 flag. Interactive (`-e`), AI-summary (`-s`), and external-service operations
 (`--telegram`, `--matrix`, `--http`) are not exposed.
+
