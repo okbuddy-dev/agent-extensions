@@ -1,3 +1,11 @@
+---
+name: mcp-wren
+description: >
+  How to use the 'mcp-wren' mcp server to interact with wren notes on another
+  server. Use whenever creating, listing, deleting or managing
+  todos, or things to do.
+---
+
 ## Overview
 
 `wren` is a plain-file todo manager. Tasks are files in a flat notes directory;
@@ -5,11 +13,6 @@ the filename is the task title and the file content (if any) is the body.
 
 You interact with wren through MCP tools that wrap the `wren` CLI. All tools
 invoke `wren` as a subprocess and return its output.
-
-**Config** (on the server machine):
-- `~/.config/wren/wren.json` — `notes_dir` and `done_dir` keys
-- `notes_dir` default: `~/Documents/notes`
-- `done_dir` default: `done` (relative to `notes_dir`)
 
 The MCP server URL is provided by the agent runtime. This skill describes the tools available once connected.
 
