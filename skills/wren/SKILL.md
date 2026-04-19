@@ -1,3 +1,11 @@
+---
+name: mcp-wren
+description: >
+  How to use the 'wren' CLI to interact with wren on another
+  server. Use whenever creating, listing, deleting or managing
+  todos, or things to do.
+---
+
 ## Overview
 
 `wren` is a plain-file todo manager. Tasks are files in a flat notes directory;
