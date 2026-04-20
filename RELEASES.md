@@ -26,6 +26,8 @@ git push origin mcp-wren/v0.3.0
 
 ### AI skill
 
+GitHub Actions auto-generates release notes from commit history.
+
 ```bash
 cd skills/wren
 git tag skill-wren/v1.2.0
