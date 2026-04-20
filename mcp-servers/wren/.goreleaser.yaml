@@ -1,0 +1,35 @@
+version: 1
+
+project_name: wren-mcp
+
+builds:
+  - id: wren-mcp
+    dir: .
+    main: .
+    binary: wren-mcp
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: '{{ .Tag }}-next'
+
+changelog:
+  use: git
+  filters:
+    exclude:
+      - '^docs:'
+      - '^tests:'
+      - '^ci:'

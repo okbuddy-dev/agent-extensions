@@ -1,0 +1,33 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'skill-wren/*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: skills/wren
+          fetch-depth: 0
+
+      - name: Extract version
+        id: meta
+        run: |
+          echo "version=${GITHUB_REF#refs/tags/skill-wren/}" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: SKILL.md
+          generate_release_notes: true
+          release_name: 'wren skill v${{ steps.meta.outputs.version }}'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
