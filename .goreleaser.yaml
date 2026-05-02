@@ -1,0 +1,114 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# vim: set ts=2 sw=2 tw=0 fo=cnqoj
+#
+# agent-extensions monorepo — GoReleaser config
+#
+# Two unrelated artifacts are released from this repo:
+#   1. mcp-wren  — Go binary (built from mcp-servers/wren/)
+#   2. wren-skill — CLI skill markdown (skills/wren/SKILL.md)
+#
+# The binary is packed into per-platform archives with its docs.
+# The skill file is attached to the release as a standalone asset
+# so CLI-skill users can download it without pulling the binary.
+#
+# To add a future Go binary (e.g. mcp-foo):
+#   1. Add a new `builds` entry with `id: mcp-foo`, `dir: mcp-servers/foo`
+#   2. Add a matching `archives` entry
+#   3. Done — goreleaser will include both in every release
+#
+# Releases are published to https://github.com/okbuddy-dev/agent-extensions
+# regardless of where the source repo lives.
+
+version: 2
+
+project_name: agent-extensions
+
+before:
+  hooks:
+    - sh -c "cd mcp-servers/wren && go mod tidy"
+
+builds:
+  # ── mcp-wren ──────────────────────────────────────────────
+  - id: mcp-wren
+    dir: mcp-servers/wren
+    main: .
+    binary: mcp-wren
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+    # ── to add mcp-foo later ────────────────────────────────
+    # - id: mcp-foo
+    #   dir: mcp-servers/foo
+    #   main: .
+    #   binary: mcp-foo
+    #   env:
+    #     - CGO_ENABLED=0
+    #   goos: [linux, darwin]
+    #   goarch: [amd64, arm64]
+    #   ldflags: [-s -w]
+
+archives:
+  # ── mcp-wren per-platform archives ─────────────────────────
+  - id: mcp-wren
+    ids: [mcp-wren]
+    formats: [tar.gz]
+    name_template: >-
+      mcp-wren_
+      {{- .Version }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+    # Include the MCP-server README and skill alongside the binary
+    # so users have documentation without cloning the repo.
+    files:
+      - src: mcp-servers/wren/README.md
+        dst: README.md
+      - src: mcp-servers/wren/SKILL.md
+        dst: SKILL.md
+    # ── to add mcp-foo later ────────────────────────────────
+    # - id: mcp-foo
+    #   builds: [mcp-foo]
+    #   formats: [tar.gz]
+    #   name_template: >-
+    #     mcp-foo_
+    #     {{- .Version }}_
+    #     {{- title .Os }}_
+    #     {{- if eq .Arch "amd64" }}x86_64
+    #     {{- else }}{{ .Arch }}{{ end }}
+    #   files:
+    #     - src: mcp-servers/foo/README.md
+    #       dst: ""
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+release:
+  github:
+    owner: okbuddy-dev
+    name: agent-extensions
+  # ── Second artifact: the CLI skill file ─────────────────────
+  # Attached as a standalone asset so CLI-skill users can grab
+  # it without downloading a binary archive.
+  extra_files:
+    - glob: ./skills/wren/SKILL.md
+      name_template: wren-skill.md
+  footer: >-
+
+    ---
+
+    Released by [GoReleaser](https://github.com/goreleaser/goreleaser).

@@ -1,0 +1,22 @@
+# Build output
+dist/
+
+# Go binaries built locally
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+
+# Coverage
+*.out
+
+# Go workspace
+go.work
+go.work.sum
+
+# Environment
+.env
